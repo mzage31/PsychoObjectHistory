@@ -15,14 +15,14 @@ def fix_histories(scene: bpy.types.Scene):
     if "histories" not in scene:
         return
     histories = scene["histories"]
-    print("Fixing Histories::Before: ", print_history(histories))
+    # print("Fixing Histories::Before: ", print_history(histories))
     new_histories = []
     for group in histories:
         new_group = list(filter(lambda a: a is not None, group))
         if any(x.name in scene.objects for x in new_group):
             new_histories.append(new_group)
     new_histories = list(filter(lambda a: a != [], new_histories))
-    print("Fixing Histories::After: ", print_history(new_histories))
+    # print("Fixing Histories::After: ", print_history(new_histories))
     scene["histories"] = new_histories
 
 
@@ -31,7 +31,7 @@ def delete_post(scene: bpy.types.Scene):
 
 
 def operator_post(scene: bpy.types.Scene, OP: bpy.types.Operator):
-    print("*************", OP.bl_idname, "*************")
+    # print("*************", OP.bl_idname, "*************")
     if OP.bl_idname in ['OBJECT_OT_delete', 'OUTLINER_OT_delete']:
         delete_post(scene)
 

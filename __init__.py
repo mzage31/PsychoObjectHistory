@@ -3,6 +3,7 @@ from . import pv_ui
 from . import pv_types
 from . import pv_operators
 from . import pv_handlers
+from . import pv_menus
 
 bl_info = {
     "name": "PsychoVertex Object History",
@@ -14,7 +15,7 @@ bl_info = {
     # "wiki_url": "http://my.wiki.url",
     # "tracker_url": "http://my.bugtracker.url",
     # "support": "COMMUNITY",
-    # "category": "Mesh"
+    "category": "Object"
 }
 
 
@@ -23,6 +24,7 @@ def register():
     pv_types.register()
     pv_operators.register()
     pv_handlers.register()
+    pv_menus.register()
 
 
 def unregister():
@@ -30,6 +32,7 @@ def unregister():
     pv_types.unregister()
     pv_operators.unregister()
     pv_handlers.unregister()
+    pv_menus.unregister()
 
 
 if __name__ == "__main__":

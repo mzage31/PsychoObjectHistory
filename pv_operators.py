@@ -4,7 +4,7 @@ import idprop
 from . import pv_utils
 
 
-class OP_InitObjectHistory(bpy.types.Operator):
+class OP_InitializeObjectHistory(bpy.types.Operator):
     bl_idname = "object.initialize_object_history"
     bl_label = "Initialize Object History"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
@@ -25,7 +25,7 @@ class OP_InitObjectHistory(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class OP_DeleteObjectHistory(bpy.types.Operator):
+class OP_DeleteAllObjectHistory(bpy.types.Operator):
     bl_idname = "object.delete_object_history"
     bl_label = "Delete Object History"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
@@ -51,8 +51,36 @@ class OP_DeleteObjectHistory(bpy.types.Operator):
         return context.window_manager.invoke_confirm(self, event)
 
 
-class OP_AddObjectHistory(bpy.types.Operator):
-    bl_idname = "object.add_object_history"
+class OP_DuplicateObjectHistory(bpy.types.Operator):
+    bl_idname = "object.duplicate_object_history"
+    bl_label = "Duplicate"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    obj_name: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and "histories" in context.scene
+
+    def execute(self, context):
+        obj = bpy.data.objects[self.obj_name]
+        histories = context.scene["histories"]
+        g = None
+        for history_group in histories:
+            for item in history_group:
+                if item == obj:
+                    g = history_group
+        if g is not None:
+            new_obj = obj.copy()
+            new_obj.data = obj.data.copy()
+            g.append(new_obj)
+            pv_utils.replace_objects(obj, new_obj)
+        context.scene["histories"] = histories
+        return {'FINISHED'}
+
+
+class OP_AddNewObjectHistory(bpy.types.Operator):
+    bl_idname = "object.add_new_object_history"
     bl_label = "Add A New Object History"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -77,8 +105,8 @@ class OP_AddObjectHistory(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class OP_RemoveObjectHistory(bpy.types.Operator):
-    bl_idname = "object.remove_object_history"
+class OP_RemoveActiveObjectHistory(bpy.types.Operator):
+    bl_idname = "object.remove_active_object_history"
     bl_label = "Remove Active Object History"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
@@ -102,6 +130,33 @@ class OP_RemoveObjectHistory(bpy.types.Operator):
                     history_group.remove(item)
                     new = history_group[-1]
                     pv_utils.replace_objects(obj, new)
+        context.scene["histories"] = histories
+        return {'FINISHED'}
+
+
+class OP_RemoveObjectHistory(bpy.types.Operator):
+    bl_idname = "object.remove_object_history"
+    bl_label = "Remove"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    obj_name: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return "histories" in context.scene
+
+    def execute(self, context):
+        obj = bpy.data.objects[self.obj_name]
+        histories = context.scene["histories"]
+        for history_group in histories:
+            for item in history_group:
+                if item == obj:
+                    history_group.remove(item)
+                    print(obj.name, context.active_object.name)
+                    if obj == context.active_object:
+                        new = history_group[-1]
+                        pv_utils.replace_objects(obj, new)
+                    break
         context.scene["histories"] = histories
         return {'FINISHED'}
 
@@ -184,21 +239,28 @@ class OP_UnlinkObjectHistory(bpy.types.Operator):
         return {'FINISHED'}
 
 
+classes = [
+    OP_InitializeObjectHistory,
+    OP_DeleteAllObjectHistory,
+
+    OP_AddNewObjectHistory,
+    OP_RemoveActiveObjectHistory,
+
+    OP_SelectObjectHistory,
+
+    OP_LinkObjectHistory,
+    OP_UnlinkObjectHistory,
+
+    OP_DuplicateObjectHistory,
+    OP_RemoveObjectHistory
+]
+
+
 def register():
-    bpy.utils.register_class(OP_InitObjectHistory)
-    bpy.utils.register_class(OP_DeleteObjectHistory)
-    bpy.utils.register_class(OP_AddObjectHistory)
-    bpy.utils.register_class(OP_RemoveObjectHistory)
-    bpy.utils.register_class(OP_SelectObjectHistory)
-    bpy.utils.register_class(OP_LinkObjectHistory)
-    bpy.utils.register_class(OP_UnlinkObjectHistory)
+    for c in classes:
+        bpy.utils.register_class(c)
 
 
 def unregister():
-    bpy.utils.unregister_class(OP_InitObjectHistory)
-    bpy.utils.unregister_class(OP_DeleteObjectHistory)
-    bpy.utils.unregister_class(OP_AddObjectHistory)
-    bpy.utils.unregister_class(OP_RemoveObjectHistory)
-    bpy.utils.unregister_class(OP_SelectObjectHistory)
-    bpy.utils.unregister_class(OP_LinkObjectHistory)
-    bpy.utils.unregister_class(OP_UnlinkObjectHistory)
+    for c in classes:
+        bpy.utils.unregister_class(c)
