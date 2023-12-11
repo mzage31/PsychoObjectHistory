@@ -73,7 +73,7 @@ class OP_DuplicateObjectHistory(bpy.types.Operator):
         if g is not None:
             new_obj = obj.copy()
             new_obj.data = obj.data.copy()
-            g.append(new_obj)
+            g.insert(g.index(obj) + 1, new_obj)
             pv_utils.replace_objects(obj, new_obj)
         context.scene["histories"] = histories
         return {'FINISHED'}
