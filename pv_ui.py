@@ -5,7 +5,7 @@ from .pv_operators import (OP_InitializeObjectHistory,
                            OP_RemoveActiveObjectHistory,
                            OP_SelectObjectHistory,
                            OP_LinkObjectHistory,
-                           OP_UnlinkObjectHistory)
+                           OP_MoveObjectHistory)
 from .pv_menus import OP_MenuCaller_HistoryObjectOptions
 
 
@@ -41,15 +41,25 @@ class ObjectHistoryPanel(bpy.types.Panel):
             return
 
         row = layout.row()
-        col = row.column(align=True)
+        col = row.column()
 
         for item in my_group:
             item_row = col.row(align=True)
+            item_row.scale_y = 2
             item_row.label(text="", icon="OBJECT_DATA")
             item_row.prop(item, "name", text="")
-            c = item_row.column()
-            c.scale_x = 1.5
-            c.operator(OP_SelectObjectHistory.bl_idname, text="", depress=item == obj, icon="RESTRICT_VIEW_OFF" if item == obj else "RESTRICT_VIEW_ON").new_obj_name = item.name
+            inner_col = item_row.column(align=True)
+            inner_col.scale_x = 1.3
+            inner_col.operator(OP_SelectObjectHistory.bl_idname, text="", depress=item == obj, icon="RESTRICT_VIEW_OFF" if item == obj else "RESTRICT_VIEW_ON").new_obj_name = item.name
+
+            inner_col = item_row.column(align=True)
+            inner_col.scale_y = 0.5 
+            move = inner_col.operator(OP_MoveObjectHistory.bl_idname, text="", icon="TRIA_UP")
+            move.dir = 'UP'
+            move.obj_name = item.name
+            move = inner_col.operator(OP_MoveObjectHistory.bl_idname, text="", icon="TRIA_DOWN")
+            move.dir = 'DOWN'
+            move.obj_name = item.name
             item_row.operator(OP_MenuCaller_HistoryObjectOptions.bl_idname, text="", icon="DOWNARROW_HLT").obj_name = item.name
 
         side = row.column()

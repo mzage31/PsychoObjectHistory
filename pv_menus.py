@@ -3,14 +3,12 @@ from .pv_operators import (OP_DuplicateObjectHistory,
                            OP_RemoveObjectHistory,
                            OP_CopyObjectHistory,
                            OP_PasteObjectHistory,
-                           OP_LinkObjectHistory,
-                           OP_UnlinkObjectHistory,
-                           )
+                           OP_UnlinkObjectHistory)
 
 
 class MT_HistoryObjectOptions(bpy.types.Menu):
     bl_label = ""
-    bl_idname = "object_MT_history_object_options"
+    bl_idname = "OBJECT_MT_history_object_options"
 
     obj_name = None
 
@@ -28,16 +26,17 @@ class MT_HistoryObjectOptions(bpy.types.Menu):
         copy.is_cut = True
         layout.operator(OP_PasteObjectHistory.bl_idname, icon="PASTEDOWN").obj_name = self.obj_name
         layout.separator()
-        
+
         layout.operator(OP_DuplicateObjectHistory.bl_idname, icon="DUPLICATE").obj_name = self.obj_name
         layout.operator(OP_RemoveObjectHistory.bl_idname, icon="TRASH").obj_name = self.obj_name
         layout.separator()
-        
-        layout.operator(OP_UnlinkObjectHistory.bl_idname, text="UnLink", icon='UNLINKED').obj_name = self.obj_name
+
+        layout.operator(OP_UnlinkObjectHistory.bl_idname, text="Unlink", icon='UNLINKED').obj_name = self.obj_name
 
 
 class OP_MenuCaller_HistoryObjectOptions(bpy.types.Operator):
     bl_idname = "object.history_object_options_menu_caller"
+    bl_description = "Opens this history object's options menu"
     bl_label = ""
 
     obj_name: bpy.props.StringProperty()

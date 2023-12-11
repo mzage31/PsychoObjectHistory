@@ -9,6 +9,7 @@ HISTORY_COPY_IS_CUT = False
 class OP_InitializeObjectHistory(bpy.types.Operator):
     bl_idname = "object.initialize_object_history"
     bl_label = "Initialize Object History"
+    bl_description = "Initializes object history for the active object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -30,6 +31,7 @@ class OP_InitializeObjectHistory(bpy.types.Operator):
 class OP_DeleteAllObjectHistory(bpy.types.Operator):
     bl_idname = "object.delete_object_history"
     bl_label = "Delete Object History"
+    bl_description = "Deletes / Uninitializes all history for the active object. Retains active history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -56,6 +58,7 @@ class OP_DeleteAllObjectHistory(bpy.types.Operator):
 class OP_DuplicateObjectHistory(bpy.types.Operator):
     bl_idname = "object.duplicate_object_history"
     bl_label = "Duplicate"
+    bl_description = "Duplicates this history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     obj_name: bpy.props.StringProperty()
@@ -84,6 +87,7 @@ class OP_DuplicateObjectHistory(bpy.types.Operator):
 class OP_AddNewObjectHistory(bpy.types.Operator):
     bl_idname = "object.add_new_object_history"
     bl_label = "Add A New Object History"
+    bl_description = "Duplicates the current active history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -110,6 +114,7 @@ class OP_AddNewObjectHistory(bpy.types.Operator):
 class OP_RemoveActiveObjectHistory(bpy.types.Operator):
     bl_idname = "object.remove_active_object_history"
     bl_label = "Remove Active Object History"
+    bl_description = "Removes the current active history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -139,6 +144,7 @@ class OP_RemoveActiveObjectHistory(bpy.types.Operator):
 class OP_RemoveObjectHistory(bpy.types.Operator):
     bl_idname = "object.remove_object_history"
     bl_label = "Remove"
+    bl_description = "Removes this history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     obj_name: bpy.props.StringProperty()
@@ -154,7 +160,6 @@ class OP_RemoveObjectHistory(bpy.types.Operator):
             for item in history_group:
                 if item == obj:
                     history_group.remove(item)
-                    print(obj.name, context.active_object.name)
                     if obj == context.active_object:
                         new = history_group[-1]
                         pv_utils.replace_objects(obj, new)
@@ -166,6 +171,7 @@ class OP_RemoveObjectHistory(bpy.types.Operator):
 class OP_SelectObjectHistory(bpy.types.Operator):
     bl_idname = "object.select_object_history"
     bl_label = "Select Object History"
+    bl_description = "Selects this history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     new_obj_name: bpy.props.StringProperty()
@@ -181,9 +187,39 @@ class OP_SelectObjectHistory(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class OP_MoveObjectHistory(bpy.types.Operator):
+    bl_idname = "object.move_object_history"
+    bl_label = "Move Object History"
+    bl_description = "Moves this history object up or down"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    dir: bpy.props.StringProperty()
+    obj_name: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return "histories" in context.scene
+
+    def execute(self, context):
+        dir = 1 if self.dir == "DOWN" else -1
+        obj = bpy.data.objects[self.obj_name]
+        histories: list = context.scene["histories"]
+        group: list
+        for group in histories:
+            for item in group:
+                if item == obj:
+                    i = group.index(item)
+                    group.insert(i + dir, group.pop(i))
+                    break
+
+        context.scene["histories"] = histories
+        return {'FINISHED'}
+
+
 class OP_LinkObjectHistory(bpy.types.Operator):
     bl_idname = "object.link_object_history"
     bl_label = "Link Object History"
+    bl_description = "Links object history of selected objects into the active object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     @classmethod
@@ -220,6 +256,7 @@ class OP_LinkObjectHistory(bpy.types.Operator):
 class OP_UnlinkObjectHistory(bpy.types.Operator):
     bl_idname = "object.unlink_object_history"
     bl_label = "Unlink Object History"
+    bl_description = "Unlinks this history object out of the history"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     obj_name: bpy.props.StringProperty()
@@ -235,10 +272,11 @@ class OP_UnlinkObjectHistory(bpy.types.Operator):
             for item in history_group:
                 if item == obj:
                     history_group.remove(item)
-                    new = history_group[-1]
+                    new: bpy.types.Object = history_group[-1]
                     pv_utils.replace_objects(obj, new)
                     new.users_collection[0].objects.link(obj)
                     new.select_set(False)
+                    obj.select_set(True)
                     context.view_layer.objects.active = obj
 
         context.scene["histories"] = histories
@@ -248,6 +286,7 @@ class OP_UnlinkObjectHistory(bpy.types.Operator):
 class OP_CopyObjectHistory(bpy.types.Operator):
     bl_idname = "object.copy_object_history"
     bl_label = "Copy"
+    bl_description = "Copies/Cuts this history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     obj_name: bpy.props.StringProperty()
@@ -268,6 +307,7 @@ class OP_CopyObjectHistory(bpy.types.Operator):
 class OP_PasteObjectHistory(bpy.types.Operator):
     bl_idname = "object.paste_object_history"
     bl_label = "Paste"
+    bl_description = "Pastes the copied history object next to this one"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     obj_name: bpy.props.StringProperty()
@@ -289,7 +329,9 @@ class OP_PasteObjectHistory(bpy.types.Operator):
                     group.remove(HISTORY_COPY_OBJECT)
                     if len(group) == 0:
                         histories.remove(group)
-                        HISTORY_COPY_OBJECT.users_collection[0].objects.unlink(HISTORY_COPY_OBJECT)
+                    else:
+                        HISTORY_COPY_OBJECT.users_collection[0].objects.link(group[-1])
+                    HISTORY_COPY_OBJECT.users_collection[0].objects.unlink(HISTORY_COPY_OBJECT)
                     break
             for group in histories:
                 if obj in group:
@@ -315,6 +357,7 @@ classes = [
     OP_RemoveActiveObjectHistory,
 
     OP_SelectObjectHistory,
+    OP_MoveObjectHistory,
 
     OP_LinkObjectHistory,
     OP_UnlinkObjectHistory,
