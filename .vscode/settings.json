@@ -1,0 +1,14 @@
+{
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "off",
+    "pylint.args": [
+        "--disable=C0103",
+        "--disable=C0114",
+        "--disable=C0115",
+        "--disable=C0116",
+        "--disable=C0301",
+        "--disable=C0304",
+        "--disable=E1111",
+        "--disable=W0603",
+    ],
+}
