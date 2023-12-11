@@ -1,5 +1,11 @@
 import bpy
-from .pv_operators import OP_DuplicateObjectHistory, OP_RemoveObjectHistory
+from .pv_operators import (OP_DuplicateObjectHistory,
+                           OP_RemoveObjectHistory,
+                           OP_CopyObjectHistory,
+                           OP_PasteObjectHistory,
+                           OP_LinkObjectHistory,
+                           OP_UnlinkObjectHistory,
+                           )
 
 
 class MT_HistoryObjectOptions(bpy.types.Menu):
@@ -13,8 +19,21 @@ class MT_HistoryObjectOptions(bpy.types.Menu):
         layout.operator_context = 'INVOKE_DEFAULT'
         layout.label(text=f"Options for {self.obj_name}")
         layout.separator()
+
+        copy = layout.operator(OP_CopyObjectHistory.bl_idname, icon="COPYDOWN")
+        copy.obj_name = self.obj_name
+        copy.is_cut = False
+        copy = layout.operator(OP_CopyObjectHistory.bl_idname, text="Cut", icon="COPYDOWN")
+        copy.obj_name = self.obj_name
+        copy.is_cut = True
+        layout.operator(OP_PasteObjectHistory.bl_idname, icon="PASTEDOWN").obj_name = self.obj_name
+        layout.separator()
+        
         layout.operator(OP_DuplicateObjectHistory.bl_idname, icon="DUPLICATE").obj_name = self.obj_name
-        layout.operator(OP_RemoveObjectHistory.bl_idname, icon="REMOVE").obj_name = self.obj_name
+        layout.operator(OP_RemoveObjectHistory.bl_idname, icon="TRASH").obj_name = self.obj_name
+        layout.separator()
+        
+        layout.operator(OP_UnlinkObjectHistory.bl_idname, text="UnLink", icon='UNLINKED').obj_name = self.obj_name
 
 
 class OP_MenuCaller_HistoryObjectOptions(bpy.types.Operator):

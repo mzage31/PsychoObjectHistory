@@ -1,7 +1,9 @@
-from sys import builtin_module_names
 import bpy
 import idprop
 from . import pv_utils
+
+HISTORY_COPY_OBJECT = None
+HISTORY_COPY_IS_CUT = False
 
 
 class OP_InitializeObjectHistory(bpy.types.Operator):
@@ -60,7 +62,7 @@ class OP_DuplicateObjectHistory(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and "histories" in context.scene
+        return "histories" in context.scene
 
     def execute(self, context):
         obj = bpy.data.objects[self.obj_name]
@@ -186,7 +188,7 @@ class OP_LinkObjectHistory(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and "histories" in context.scene
+        return "histories" in context.scene
 
     def execute(self, context):
         obj = context.active_object
@@ -220,12 +222,14 @@ class OP_UnlinkObjectHistory(bpy.types.Operator):
     bl_label = "Unlink Object History"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
+    obj_name: bpy.props.StringProperty()
+
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and "histories" in context.scene
+        return "histories" in context.scene
 
     def execute(self, context):
-        obj = context.active_object
+        obj = bpy.data.objects[self.obj_name]
         histories = context.scene["histories"]
         for history_group in histories:
             for item in history_group:
@@ -234,7 +238,71 @@ class OP_UnlinkObjectHistory(bpy.types.Operator):
                     new = history_group[-1]
                     pv_utils.replace_objects(obj, new)
                     new.users_collection[0].objects.link(obj)
+                    new.select_set(False)
+                    context.view_layer.objects.active = obj
 
+        context.scene["histories"] = histories
+        return {'FINISHED'}
+
+
+class OP_CopyObjectHistory(bpy.types.Operator):
+    bl_idname = "object.copy_object_history"
+    bl_label = "Copy"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    obj_name: bpy.props.StringProperty()
+    is_cut: bpy.props.BoolProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return "histories" in context.scene
+
+    def execute(self, context):
+        global HISTORY_COPY_OBJECT
+        global HISTORY_COPY_IS_CUT
+        HISTORY_COPY_OBJECT = bpy.data.objects[self.obj_name]
+        HISTORY_COPY_IS_CUT = self.is_cut
+        return {'FINISHED'}
+
+
+class OP_PasteObjectHistory(bpy.types.Operator):
+    bl_idname = "object.paste_object_history"
+    bl_label = "Paste"
+    bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
+
+    obj_name: bpy.props.StringProperty()
+
+    @classmethod
+    def poll(cls, context):
+        return "histories" in context.scene and HISTORY_COPY_OBJECT is not None
+
+    def execute(self, context):
+        global HISTORY_COPY_OBJECT
+        global HISTORY_COPY_IS_CUT
+        obj = bpy.data.objects[self.obj_name]
+        histories: list = context.scene["histories"]
+
+        if HISTORY_COPY_IS_CUT:
+            group: list
+            for group in histories:
+                if HISTORY_COPY_OBJECT in group:
+                    group.remove(HISTORY_COPY_OBJECT)
+                    if len(group) == 0:
+                        histories.remove(group)
+                        HISTORY_COPY_OBJECT.users_collection[0].objects.unlink(HISTORY_COPY_OBJECT)
+                    break
+            for group in histories:
+                if obj in group:
+                    group.insert(group.index(obj) + 1, HISTORY_COPY_OBJECT)
+                    break
+            HISTORY_COPY_OBJECT = None
+            HISTORY_COPY_IS_CUT = False
+        else:
+            for group in histories:
+                if obj in group:
+                    new_obj = HISTORY_COPY_OBJECT.copy()
+                    new_obj.data = HISTORY_COPY_OBJECT.data.copy()
+                    group.insert(group.index(obj) + 1, new_obj)
         context.scene["histories"] = histories
         return {'FINISHED'}
 
@@ -252,7 +320,10 @@ classes = [
     OP_UnlinkObjectHistory,
 
     OP_DuplicateObjectHistory,
-    OP_RemoveObjectHistory
+    OP_RemoveObjectHistory,
+
+    OP_CopyObjectHistory,
+    OP_PasteObjectHistory,
 ]
 
 

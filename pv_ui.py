@@ -62,7 +62,6 @@ class ObjectHistoryPanel(bpy.types.Panel):
 
         col = side.column(align=True)
         col.operator(OP_LinkObjectHistory.bl_idname, icon='LINKED', text="")
-        col.operator(OP_UnlinkObjectHistory.bl_idname, icon='UNLINKED', text="")
 
         col = side.column(align=True)
         col.operator(OP_DeleteAllObjectHistory.bl_idname, icon='TRASH', text="")
