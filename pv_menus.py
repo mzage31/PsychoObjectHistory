@@ -3,7 +3,7 @@ from .pv_operators import OP_DuplicateObjectHistory, OP_RemoveObjectHistory
 
 
 class MT_HistoryObjectOptions(bpy.types.Menu):
-    bl_label = "Options"
+    bl_label = ""
     bl_idname = "object_MT_history_object_options"
 
     obj_name = None
@@ -11,6 +11,8 @@ class MT_HistoryObjectOptions(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'INVOKE_DEFAULT'
+        layout.label(text=f"Options for {self.obj_name}")
+        layout.separator()
         layout.operator(OP_DuplicateObjectHistory.bl_idname, icon="DUPLICATE").obj_name = self.obj_name
         layout.operator(OP_RemoveObjectHistory.bl_idname, icon="REMOVE").obj_name = self.obj_name
 
