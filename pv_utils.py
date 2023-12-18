@@ -26,6 +26,12 @@ def unique_name(collection, base_name):
         count += 1
     return name
 
+def swap_name(obj1, obj2):
+    name1 = obj1.name
+    name2 = obj2.name
+    obj2.name = "lka!$l#@jsdjlkh56asd123jkhgqu"
+    obj1.name = name2
+    obj2.name = name1
 
 def replace_objects(old: bpy.types.Object, new: bpy.types.Object):
     if old == new:

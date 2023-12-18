@@ -90,6 +90,8 @@ class OP_AddNewObjectHistory(bpy.types.Operator):
     bl_description = "Duplicates the current active history object"
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
+    invert_naming: bpy.props.BoolProperty(default=False)
+
     @classmethod
     def poll(cls, context):
         return context.active_object is not None and "histories" in context.scene
@@ -107,6 +109,8 @@ class OP_AddNewObjectHistory(bpy.types.Operator):
             new_obj.data = obj.data.copy()
             g.append(new_obj)
             pv_utils.replace_objects(obj, new_obj)
+            if not self.invert_naming:
+                pv_utils.swap_name(obj, new_obj)
         context.scene["histories"] = histories
         return {'FINISHED'}
 
