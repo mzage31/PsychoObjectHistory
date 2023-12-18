@@ -97,7 +97,14 @@ class ObjectHistoryKeymapPanel(bpy.types.Panel):
         draw_history_panel(self, context, True)
 
 
+def new_object_context_menu_draw(self, context:bpy.types.Context):
+    layout: bpy.types.UILayout = self.layout
+    layout.operator("wm.call_panel", text="Object History", icon="OBJECT_DATA").name = ObjectHistoryKeymapPanel.bl_idname
+    old_object_context_menu_draw(self, context)
+
+
 kmi = None
+old_object_context_menu_draw = None
 
 
 def register():
@@ -111,6 +118,10 @@ def register():
     kmi.properties.name = ObjectHistoryKeymapPanel.bl_idname
     kmi.properties.keep_open = True
 
+    global old_object_context_menu_draw
+    old_object_context_menu_draw = bpy.types.VIEW3D_MT_object_context_menu.draw
+    bpy.types.VIEW3D_MT_object_context_menu.draw = new_object_context_menu_draw
+
 
 def unregister():
     bpy.utils.unregister_class(ObjectHistoryPanel)
@@ -120,3 +131,5 @@ def unregister():
     km = kc.keymaps.get('3D View')
     if kmi is not None:
         km.keymap_items.remove(kmi)
+
+    bpy.types.VIEW3D_MT_object_context_menu.draw = old_object_context_menu_draw
